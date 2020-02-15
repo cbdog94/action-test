@@ -13,11 +13,14 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
     - name: Build project # This would actually build your project, using zip for an example artifact
       id: build
       run: |
-        tar -Jcf linux-${{ github.ref }}.tar.xz  .[!.]*
-        sha=`sha256sum linux-${{ github.ref }}.tar.xz | awk {'print $1'}`
+        tar -Jcf linux-${{ steps.get_version.outputs.VERSION }}.tar.xz  .[!.]*
+        sha=`sha256sum linux-${{ steps.get_version.outputs.VERSION }}.tar.xz | awk {'print $1'}`
         echo ::set-output name=sha::$sha
 
     - name: Create Release
@@ -26,10 +29,10 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: Release ${{ steps.get_version.outputs.VERSION }}
         body: |
-            Linux kernel ${{ github.ref }}.
+            Linux kernel ${{ steps.get_version.outputs.VERSION }}.
             sha256sum: ${{ steps.build.outputs.sha }}
         draft: false
         prerelease: false
@@ -40,6 +43,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: ./linux-${{ github.ref }}.tar.xz
-        asset_name: linux-${{ github.ref }}.tar.xz
+        asset_path: ./linux-${{ steps.get_version.outputs.VERSION }}.tar.xz
+        asset_name: linux-${{ gsteps.get_version.outputs.VERSION }}.tar.xz
         asset_content_type: application/x-gtar
