@@ -11,18 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
     - name: Get the version
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        path: 'linux-${{ steps.get_version.outputs.VERSION }}'
     - name: Build project # This would actually build your project, using zip for an example artifact
       id: build
       run: |
         rm -rf .git .github
-        compress_dir=`pwd`
         cd ..
-        tar -Jcf linux-${{ steps.get_version.outputs.VERSION }}.tar.xz  $compress_dir
+        tar -Jcf linux-${{ steps.get_version.outputs.VERSION }}.tar.xz  linux-${{ steps.get_version.outputs.VERSION }}
         sha=`sha256sum linux-${{ steps.get_version.outputs.VERSION }}.tar.xz | awk {'print $1'}`
         echo ::set-output name=sha::$sha
 
@@ -46,6 +47,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: ./linux-${{ steps.get_version.outputs.VERSION }}.tar.xz
+        asset_path: ../linux-${{ steps.get_version.outputs.VERSION }}.tar.xz
         asset_name: linux-${{ steps.get_version.outputs.VERSION }}.tar.xz
         asset_content_type: application/x-gtar
