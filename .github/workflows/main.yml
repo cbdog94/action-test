@@ -23,7 +23,8 @@ jobs:
       run: |
         rm -rf .git .github
         cd ..
-        tar -Jcf linux-${{ steps.get_version.outputs.VERSION }}.tar.xz  linux-${{ steps.get_version.outputs.VERSION }}
+        echo `ls`
+        tar -Jcf linux-${{ steps.get_version.outputs.VERSION }}.tar.xz linux-${{ steps.get_version.outputs.VERSION }}
         sha=`sha256sum linux-${{ steps.get_version.outputs.VERSION }}.tar.xz | awk {'print $1'}`
         echo ::set-output name=sha::$sha
 
